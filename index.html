@@ -1,0 +1,77 @@
+function doGet(e) {
+  return handleRequest(e);
+}
+function doPost(e) {
+  return handleRequest(e);
+}
+
+function handleRequest(e) {
+  const params = e.parameter;
+  const action = params.action;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let result = {};
+
+  try {
+    if (action === 'getStudents') {
+      const sheet = ss.getSheetByName('학생정보');
+      const data = sheet.getDataRange().getValues();
+      const students = [];
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0]) students.push({
+          name: data[i][0], teacher: data[i][1], school: data[i][2],
+          grade: data[i][3], birth: data[i][4], parent: data[i][5],
+          phone: data[i][6], church: data[i][7]
+        });
+      }
+      result = { status: 'ok', data: students };
+
+    } else if (action === 'saveAttendance') {
+      const sheet = ss.getSheetByName('출석');
+      const rows = JSON.parse(params.rows);
+      rows.forEach(r => {
+        const data = sheet.getDataRange().getValues();
+        let found = false;
+        for (let i = 1; i < data.length; i++) {
+          if (data[i][0] === r.date && data[i][1] === r.teacher && data[i][2] === r.name) {
+            sheet.getRange(i+1, 4).setValue(r.status);
+            sheet.getRange(i+1, 5).setValue(r.reason || '');
+            found = true; break;
+          }
+        }
+        if (!found) sheet.appendRow([r.date, r.teacher, r.name, r.status, r.reason || '']);
+      });
+      result = { status: 'ok' };
+
+    } else if (action === 'saveStudent') {
+      const sheet = ss.getSheetByName('학생정보');
+      const s = JSON.parse(params.student);
+      const data = sheet.getDataRange().getValues();
+      let found = false;
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === s.name && data[i][1] === s.teacher) {
+          sheet.getRange(i+1, 1, 1, 8).setValues([[s.name, s.teacher, s.school, s.grade, s.birth, s.parent, s.phone, s.church]]);
+          found = true; break;
+        }
+      }
+      if (!found) sheet.appendRow([s.name, s.teacher, s.school, s.grade, s.birth, s.parent, s.phone, s.church]);
+      result = { status: 'ok' };
+
+    } else if (action === 'getAttendance') {
+      const sheet = ss.getSheetByName('출석');
+      const data = sheet.getDataRange().getValues();
+      const rows = [];
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === params.date && data[i][1] === params.teacher) {
+          rows.push({ name: data[i][2], status: data[i][3], reason: data[i][4] });
+        }
+      }
+      result = { status: 'ok', data: rows };
+    }
+  } catch(err) {
+    result = { status: 'error', message: err.toString() };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
