@@ -442,7 +442,7 @@ function selectTeacher(id){
 /* ── 날짜 ── */
 const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const DAYS=['일','월','화','수','목','금','토'];
-let dateShowMonths = 3; // 처음엔 3개월치 표시
+let dateShowMonths = 2; // 처음엔 2개월치 표시
 
 function getLatestSunday(){
   const today=new Date();
@@ -512,7 +512,7 @@ function renderDateList(){
   document.getElementById('date-list').innerHTML=html;
 }
 function loadMoreDates(){
-  dateShowMonths+=3;
+  dateShowMonths+=1;
   renderDateList();
   // 새로 추가된 부분으로 스크롤
   const el=document.getElementById('date-list');
