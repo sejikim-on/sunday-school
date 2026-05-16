@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="주일학교"/>
+<title>주일학교 출석부</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --primary:#3B6D11;--primary-bg:#EAF3DE;--primary-border:#639922;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;--danger-border:#E24B4A;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-border:#BA7517;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --text:#1a1a1a;--text-sub:#666;--text-hint:#999;
+  --border:rgba(0,0,0,0.1);--border-md:rgba(0,0,0,0.18);
+  --bg:#f5f4f0;--card:#fff;--card2:#f9f8f5;
+  --radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+.topbar{background:var(--card);border-bottom:0.5px solid var(--border);padding:14px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+.topbar-sub{font-size:12px;color:var(--text-sub);margin-top:1px;}
+.back-ico{background:none;border:none;cursor:pointer;padding:4px 6px;color:var(--text-sub);font-size:20px;display:flex;align-items:center;flex-shrink:0;}
+.home-ico{background:none;border:0.5px solid var(--border-md);border-radius:20px;cursor:pointer;padding:6px 11px;color:var(--text-sub);font-size:13px;display:flex;align-items:center;gap:4px;font-family:inherit;white-space:nowrap;}
+.home-ico:active{background:var(--card2);}
+.content{padding:18px;flex:1;overflow-y:auto;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.card-btn{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px 12px;cursor:pointer;text-align:center;transition:all .15s;width:100%;}
+.card-btn:active{transform:scale(0.97);background:var(--card2);}
+.card-btn .nm{font-size:15px;font-weight:700;color:var(--text);}
+.card-btn .sb{font-size:12px;color:var(--text-sub);margin-top:4px;}
+.section-label{font-size:11px;font-weight:700;color:var(--text-hint);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;margin-top:4px;}
+.date-month-group{margin-bottom:18px;}
+.date-month-title{font-size:13px;font-weight:700;color:var(--text-sub);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.date-month-title::after{content:'';flex:1;height:0.5px;background:var(--border);}
+.date-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.date-chip{border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 4px;cursor:pointer;text-align:center;background:var(--card);transition:all .15s;position:relative;}
+.date-chip:active{transform:scale(0.96);background:var(--card2);}
+.date-chip.today-chip{border-color:var(--primary-border);background:var(--primary-bg);}
+.date-chip.has-data::after{content:'';position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--primary-border);}
+.date-chip .mo{font-size:10px;color:var(--text-sub);}
+.date-chip.today-chip .mo{color:var(--primary);}
+.date-chip .dy{font-size:17px;font-weight:700;color:var(--text);margin-top:2px;}
+.date-chip.today-chip .dy{color:var(--primary);}
+.date-chip .dy-label{font-size:9px;color:var(--text-hint);margin-top:1px;}
+.load-more-btn{width:100%;padding:12px;margin-top:4px;margin-bottom:16px;background:var(--card);border:0.5px dashed var(--border-md);border-radius:var(--radius-sm);font-size:13px;color:var(--text-sub);cursor:pointer;font-family:inherit;}
+.load-more-btn:active{background:var(--card2);}
+.summary-bar{display:flex;gap:8px;margin-bottom:16px;}
+.stat{flex:1;background:var(--card);border-radius:var(--radius-sm);padding:10px 8px;text-align:center;border:0.5px solid var(--border);}
+.stat .num{font-size:22px;font-weight:700;color:var(--text);}
+.stat .lbl{font-size:11px;color:var(--text-sub);margin-top:2px;}
+.srow{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:8px;}
+.srow-top{display:flex;align-items:center;justify-content:space-between;}
+.sname{font-size:15px;font-weight:500;color:var(--text);}
+.tog-wrap{display:flex;gap:6px;}
+.tog{border:0.5px solid var(--border-md);border-radius:20px;padding:6px 16px;font-size:13px;cursor:pointer;background:var(--card2);color:var(--text-sub);font-family:inherit;transition:all .15s;}
+.tog:active{transform:scale(0.95);}
+.tog.present{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);font-weight:700;}
+.tog.absent{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger);font-weight:700;}
+.reason-inp{margin-top:9px;width:100%;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:9px 11px;font-size:13px;color:var(--text);background:var(--card2);font-family:inherit;}
+.reason-inp:focus{outline:none;border-color:var(--primary-border);}
+.big-btn{width:100%;margin-top:16px;padding:15px;background:var(--card);border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-size:15px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;transition:all .15s;}
+.big-btn:active{transform:scale(0.98);}
+.big-btn.ok{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);}
+.big-btn.danger{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger);margin-top:8px;}
+.slink{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.slink:active{background:var(--card2);}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue);flex-shrink:0;}
+.new-badge{font-size:10px;padding:2px 7px;background:var(--amber-bg);border:0.5px solid var(--amber-border);color:var(--amber);border-radius:20px;margin-left:6px;}
+.info-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;}
+.avatar-lg{width:54px;height:54px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--blue);margin-bottom:12px;}
+.irow{display:flex;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid var(--border);}
+.irow:last-child{border-bottom:none;padding-bottom:0;}
+.ilabel{font-size:12px;color:var(--text-sub);width:90px;flex-shrink:0;padding-top:2px;}
+.ival{font-size:14px;color:var(--text);font-weight:500;}
+.badge-yes{display:inline-block;font-size:12px;padding:2px 10px;background:var(--primary-bg);border:0.5px solid var(--primary-border);color:var(--primary);border-radius:20px;}
+.badge-no{display:inline-block;font-size:12px;padding:2px 10px;background:var(--danger-bg);border:0.5px solid var(--danger-border);color:var(--danger);border-radius:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--text-sub);margin-bottom:5px;display:block;font-weight:500;}
+.form-inp{width:100%;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:11px 12px;font-size:14px;color:var(--text);background:var(--card);font-family:inherit;}
+.form-inp:focus{outline:none;border-color:var(--primary-border);}
+.form-inp:disabled{opacity:.5;background:var(--card2);}
+.form-sel{width:100%;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:11px 12px;font-size:14px;color:var(--text);background:var(--card);font-family:inherit;}
+.radio-grp{display:flex;gap:8px;}
+.radio-opt{flex:1;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:10px;text-align:center;cursor:pointer;font-size:13px;color:var(--text-sub);background:var(--card2);transition:all .15s;}
+.radio-opt:active{transform:scale(0.96);}
+.radio-opt.sel-yes{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);font-weight:700;}
+.radio-opt.sel-no{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger);font-weight:700;}
+.radio-opt.sel-uk{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber);font-weight:700;}
+.tab-bar{display:flex;border-bottom:0.5px solid var(--border);background:var(--card);margin:-18px -18px 18px;}
+.tab{flex:1;padding:13px;font-size:14px;font-weight:500;background:none;border:none;cursor:pointer;color:var(--text-sub);border-bottom:2.5px solid transparent;font-family:inherit;transition:all .15s;}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--text-sub);font-size:14px;}
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:11px 22px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.empty{text-align:center;padding:32px 16px;color:var(--text-hint);font-size:13px;}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.ico-btn{background:none;border:0.5px solid var(--border-md);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;}
+.ico-btn:active{background:var(--card2);}
+/* ── 통계 화면 ── */
+.stat-section{margin-bottom:20px;}
+.stat-section-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.stat-date-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;}
+.stat-date-header{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.stat-date-label{font-size:14px;font-weight:700;color:var(--text);}
+.stat-date-pills{display:flex;gap:6px;align-items:center;}
+.pill{font-size:12px;padding:3px 9px;border-radius:20px;font-weight:700;}
+.pill-p{background:var(--primary-bg);color:var(--primary);}
+.pill-a{background:var(--danger-bg);color:var(--danger);}
+.pill-t{background:var(--card2);color:var(--text-sub);border:0.5px solid var(--border);}
+.stat-class-rows{border-top:0.5px solid var(--border);padding:10px 14px;display:flex;flex-direction:column;gap:6px;}
+.stat-class-row{display:flex;align-items:center;justify-content:space-between;}
+.stat-class-name{font-size:13px;color:var(--text-sub);}
+.stat-class-pills{display:flex;gap:5px;}
+.bar-wrap{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-top:3px;width:100%;}
+.bar-fill{height:100%;background:var(--primary-border);border-radius:3px;transition:width .4s;}
+.stat-filter-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;}
+.filter-chip{border:0.5px solid var(--border-md);border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer;background:var(--card2);color:var(--text-sub);white-space:nowrap;font-family:inherit;}
+.filter-chip.active{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);font-weight:700;}
+/* ── 인라인 수정 ── */
+.edit-field-row{display:flex;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);gap:8px;}
+.edit-field-row:last-child{border-bottom:none;}
+.edit-field-label{font-size:12px;color:var(--text-sub);width:90px;flex-shrink:0;}
+.edit-field-inp{flex:1;border:0.5px solid var(--border-md);border-radius:6px;padding:6px 9px;font-size:14px;color:var(--text);background:var(--card2);font-family:inherit;}
+.edit-field-inp:focus{outline:none;border-color:var(--primary-border);}
+.edit-field-sel{flex:1;border:0.5px solid var(--border-md);border-radius:6px;padding:6px 9px;font-size:14px;color:var(--text);background:var(--card2);font-family:inherit;}
+.edit-radio-grp{display:flex;gap:5px;flex:1;}
+.edit-radio-opt{flex:1;border:0.5px solid var(--border-md);border-radius:6px;padding:6px 4px;text-align:center;cursor:pointer;font-size:12px;color:var(--text-sub);background:var(--card2);}
+.edit-radio-opt.sel-yes{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);font-weight:700;}
+.edit-radio-opt.sel-no{background:var(--danger-bg);border-color:var(--danger-border);color:var(--danger);font-weight:700;}
+.edit-radio-opt.sel-uk{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber);font-weight:700;}
+.mode-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.mode-btn{flex:1;padding:9px;font-size:13px;font-weight:700;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:var(--card2);color:var(--text-sub);cursor:pointer;font-family:inherit;}
+.mode-btn.active{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary);}
+/* ── 통계 탭 & 확장 ── */
+.stats-tab-bar{display:flex;border-bottom:0.5px solid var(--border);background:var(--card);margin:-18px -18px 18px;}
+.stats-tab{flex:1;padding:12px 6px;font-size:13px;font-weight:500;background:none;border:none;cursor:pointer;color:var(--text-sub);border-bottom:2.5px solid transparent;font-family:inherit;}
+.stats-tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:700;}
+.summary-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.sum-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center;}
+.sum-card .s-num{font-size:22px;font-weight:700;}
+.sum-card .s-lbl{font-size:11px;color:var(--text-sub);margin-top:3px;}
+.sum-card.c-p .s-num{color:var(--primary);}
+.sum-card.c-a .s-num{color:var(--danger);}
+.sum-card.c-r .s-num{color:var(--blue);}
+.month-stat-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;}
+.month-stat-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.month-stat-header:active{background:var(--card2);}
+.month-label{font-size:15px;font-weight:700;color:var(--text);}
+.month-rate{font-size:13px;font-weight:700;color:var(--primary);}
+.month-detail{display:none;border-top:0.5px solid var(--border);padding:10px 14px;flex-direction:column;gap:6px;}
+.week-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border);}
+.week-row:last-child{border-bottom:none;}
+.week-date{font-size:13px;color:var(--text-sub);width:70px;}
+.week-bar-wrap{flex:1;margin:0 10px;}
+.year-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;}
+.year-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+.year-header:active{background:var(--card2);}
+.year-label{font-size:15px;font-weight:700;color:var(--text);}
+.year-detail{display:none;border-top:0.5px solid var(--border);padding:10px 14px;flex-direction:column;gap:5px;}
+.year-month-row{display:flex;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--border);}
+.year-month-row:last-child{border-bottom:none;}
+.year-month-label{font-size:13px;color:var(--text-sub);width:55px;flex-shrink:0;}
+.student-stat-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:7px;overflow:hidden;}
+.student-stat-header{padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.student-att-bar{flex:1;margin:0 8px;}
+/* ── 검색 ── */
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-inp{width:100%;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:11px 12px 11px 38px;font-size:14px;color:var(--text);background:var(--card);font-family:inherit;}
+.search-inp:focus{outline:none;border-color:var(--primary-border);}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-hint);font-size:16px;pointer-events:none;}
+.all-teacher-section{margin-bottom:20px;}
+.all-teacher-label{font-size:12px;font-weight:700;color:var(--text-sub);letter-spacing:.06em;margin-bottom:8px;padding:0 2px;display:flex;align-items:center;gap:6px;}
+.all-teacher-label::after{content:'';flex:1;height:0.5px;background:var(--border);}
+/* ── 연락처 라디오 (부/모) ── */
+.phone-group{display:flex;flex-direction:column;gap:6px;flex:1;}
+.phone-row{display:flex;gap:6px;align-items:center;}
+.phone-tag{font-size:11px;font-weight:700;width:18px;color:var(--text-sub);flex-shrink:0;}
+.phone-inp-wrap{display:flex;gap:5px;flex:1;align-items:center;}
+.phone-who{font-size:11px;padding:4px 8px;border:0.5px solid var(--border-md);border-radius:12px;cursor:pointer;background:var(--card2);color:var(--text-sub);white-space:nowrap;}
+.phone-who.sel{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-weight:700;}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- ══════════════════════════════════════
+     S1: 홈 - 선생님 선택
+══════════════════════════════════════ -->
+<div id="s-teacher" class="screen active">
+  <div class="topbar">
+    <div style="flex:1">
+      <div class="topbar-title">✝ 주일학교 출석부</div>
+      <div class="topbar-sub">선생님을 선택하세요</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ico-btn" onclick="openAllStudents()">👥 학생목록</button>
+      <button class="ico-btn" onclick="openStats()">📊 통계</button>
+    </div>
+  </div>
+  <div class="content">
+    <div id="sync-banner" style="display:none;background:var(--amber-bg);border:0.5px solid var(--amber-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--amber);align-items:center;gap:8px;">
+      <span id="sync-msg">🔄 구글시트에서 데이터를 불러오는 중...</span>
+    </div>
+    <div id="teacher-grid" class="grid2"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S2: 날짜 선택 / 학생 목록
+══════════════════════════════════════ -->
+<div id="s-date" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="goTo('s-teacher')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title" id="date-title"></div>
+      <div class="topbar-sub">출석체크 / 학생 목록</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ico-btn" onclick="openNewStudent()">+ 새 학생</button>
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="tab-bar">
+      <button class="tab active" id="tab-att" onclick="switchTab('att')">출석체크</button>
+      <button class="tab" id="tab-list" onclick="switchTab('list')">학생 목록</button>
+    </div>
+    <div id="pane-att">
+      <div class="section-label" style="margin-bottom:12px;">주일 날짜를 선택하세요</div>
+      <div id="date-list"></div>
+    </div>
+    <div id="pane-list" style="display:none">
+      <div id="student-links"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S3: 출석체크
+══════════════════════════════════════ -->
+<div id="s-students" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="goTo('s-date')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title" id="att-title">출석체크</div>
+      <div class="topbar-sub" id="att-sub"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="summary-bar">
+      <div class="stat"><div class="num" id="cnt-t">0</div><div class="lbl">전체</div></div>
+      <div class="stat"><div class="num" id="cnt-p">0</div><div class="lbl">출석</div></div>
+      <div class="stat"><div class="num" id="cnt-a">0</div><div class="lbl">결석</div></div>
+    </div>
+    <div id="student-list"></div>
+    <button class="big-btn" id="save-att-btn" onclick="saveAttendance()">💾 저장하고 처음으로</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S4: 학생 신상정보 (보기 + 인라인 수정)
+══════════════════════════════════════ -->
+<div id="s-detail" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="state.fromAll?goTo('s-all-students'):goTo('s-date')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title" id="detail-name-title"></div>
+      <div class="topbar-sub">학생 신상정보</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ico-btn" id="detail-edit-btn" onclick="toggleDetailEdit()">✏️ 수정</button>
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="info-card">
+      <div class="avatar-lg" id="detail-avatar"></div>
+      <!-- 보기 모드 -->
+      <div id="detail-view"></div>
+      <!-- 수정 모드 -->
+      <div id="detail-edit-form" style="display:none">
+        <div class="edit-field-row">
+          <span class="edit-field-label">담당 선생님</span>
+          <select class="edit-field-sel" id="ef-teacher"></select>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">학교</span>
+          <input class="edit-field-inp" id="ef-school" type="text" placeholder="학교 이름"/>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">학년</span>
+          <select class="edit-field-sel" id="ef-grade">
+            <option value="">선택</option>
+            <option>4세</option><option>5세</option><option>6세</option>7세</option>
+            <option>1학년</option><option>2학년</option><option>3학년</option>
+            <option>4학년</option><option>5학년</option><option>6학년</option>          
+          </select>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">생년월일</span>
+          <input class="edit-field-inp" id="ef-birth" type="text" placeholder="2015-03-20"/>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">부 이름</span>
+          <input class="edit-field-inp" id="ef-father" type="text" placeholder="아버지 이름"/>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">모 이름</span>
+          <input class="edit-field-inp" id="ef-mother" type="text" placeholder="어머니 이름"/>
+        </div>
+        <div class="edit-field-row" style="align-items:flex-start;padding-top:9px;">
+          <span class="edit-field-label" style="padding-top:4px;">부모님 연락처</span>
+          <div class="phone-group">
+            <div class="phone-row">
+              <span class="phone-tag">부</span>
+              <div class="phone-inp-wrap">
+                <input class="edit-field-inp" id="ef-phone-f" type="text" placeholder="010-0000-0000" style="flex:1;"/>
+              </div>
+            </div>
+            <div class="phone-row">
+              <span class="phone-tag">모</span>
+              <div class="phone-inp-wrap">
+                <input class="edit-field-inp" id="ef-phone-m" type="text" placeholder="010-0000-0000" style="flex:1;"/>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="edit-field-row">
+          <span class="edit-field-label">부모님 교회출석</span>
+          <div class="edit-radio-grp">
+            <div class="edit-radio-opt" id="er-yes" onclick="setEditChurch('yes')">출석</div>
+            <div class="edit-radio-opt" id="er-no" onclick="setEditChurch('no')">미출석</div>
+            <div class="edit-radio-opt" id="er-uk" onclick="setEditChurch('unknown')">모름</div>
+          </div>
+        </div>
+        <div class="edit-field-row" style="align-items:flex-start;padding-top:9px;">
+          <span class="edit-field-label" style="padding-top:4px;">비고</span>
+          <textarea class="edit-field-inp" id="ef-memo" rows="3" placeholder="특이사항, 알레르기, 기타 메모..." style="resize:vertical;line-height:1.5;"></textarea>
+        </div>
+        <button class="big-btn ok" style="margin-top:14px" onclick="saveDetailEdit()">저장하기</button>
+        <button class="big-btn danger" onclick="deleteStudentFromDetail()">이 학생 삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S5: 새 학생 등록 폼
+══════════════════════════════════════ -->
+<div id="s-form" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="goTo('s-date')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title">새 학생 등록</div>
+      <div class="topbar-sub">정보를 입력하세요</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="form-group">
+      <label class="form-label">이름 *</label>
+      <input class="form-inp" id="f-name" type="text" placeholder="학생 이름"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">담당 선생님</label>
+      <select class="form-sel" id="f-teacher"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">학교</label>
+      <input class="form-inp" id="f-school" type="text" placeholder="학교 이름"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">학년</label>
+      <select class="form-sel" id="f-grade">
+        <option value="">선택</option>
+        <option>4세</option><option>5세</option><option>6세</option><option>7세</option>
+        <option>1학년</option><option>2학년</option><option>3학년</option>
+        <option>4학년</option><option>5학년</option><option>6학년</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">생년월일</label>
+      <input class="form-inp" id="f-birth" type="text" placeholder="예: 2015-03-20"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">부 이름</label>
+      <input class="form-inp" id="f-father" type="text" placeholder="아버지 이름"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">모 이름</label>
+      <input class="form-inp" id="f-mother" type="text" placeholder="어머니 이름"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">부모님 연락처</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-sub);width:16px;">부</span>
+          <input class="form-inp" id="f-phone-f" type="text" placeholder="010-0000-0000" style="flex:1;margin:0;"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--text-sub);width:16px;">모</span>
+          <input class="form-inp" id="f-phone-m" type="text" placeholder="010-0000-0000" style="flex:1;margin:0;"/>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">부모님 교회 출석 여부</label>
+      <div class="radio-grp">
+        <div class="radio-opt" id="r-yes" onclick="setChurch('yes')">출석</div>
+        <div class="radio-opt" id="r-no" onclick="setChurch('no')">미출석</div>
+        <div class="radio-opt" id="r-uk" onclick="setChurch('unknown')">모름</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">비고</label>
+      <textarea class="form-inp" id="f-memo" rows="3" placeholder="특이사항, 알레르기, 기타 메모..." style="resize:vertical;line-height:1.5;"></textarea>
+    </div>
+    <button class="big-btn" id="form-save-btn" onclick="saveNewStudent()">저장하기</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S6: 통계
+══════════════════════════════════════ -->
+<div id="s-stats" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="goTo('s-teacher')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title">📊 출석 통계</div>
+      <div class="topbar-sub" id="stats-topbar-sub">전체 출석 현황</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <!-- 반 필터 -->
+    <div class="stat-filter-row" id="stats-filter"></div>
+    <!-- 탭: 주별 / 월별 / 학생별 -->
+    <div class="stats-tab-bar" style="margin-top:8px;">
+      <button class="stats-tab active" id="stab-week" onclick="switchStatsTab('week')">주별</button>
+      <button class="stats-tab" id="stab-month" onclick="switchStatsTab('month')">월별</button>
+      <button class="stats-tab" id="stab-student" onclick="switchStatsTab('student')">학생별</button>
+    </div>
+    <div id="stats-body"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     S7: 전체 학생 목록
+══════════════════════════════════════ -->
+<div id="s-all-students" class="screen">
+  <div class="topbar">
+    <button class="back-ico" onclick="goTo('s-teacher')">←</button>
+    <div style="flex:1">
+      <div class="topbar-title">👥 전체 학생 목록</div>
+      <div class="topbar-sub" id="all-students-sub"></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="home-ico" onclick="goTo('s-teacher')">🏠 홈</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input class="search-inp" id="all-search-inp" type="text" placeholder="학생 이름으로 검색..." oninput="filterAllStudents()"/>
+    </div>
+    <div id="all-students-body"></div>
+  </div>
+</div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbzbsyey-zK3FFOJNpPrxXPXdvjpeOCb1w2YinPVI07FQgUxyzhl-s2_M397sq5vxeLNXA/exec';
+
+/* ───────────────────────────────────────────────────────────────
+   ▼ Apps Script (Google Sheets) 에 아래 액션을 추가해야 합니다 ▼
+
+   } else if (action === 'getAllAttendance') {
+     const sheet = ss.getSheetByName('출석');
+     const data = sheet.getDataRange().getValues();
+     const offset = parseInt(params.offset || '0');
+     const limit = parseInt(params.limit || '500');
+     const rows = [];
+     for (let i = 1; i < data.length; i++) {
+       if (data[i][0]) rows.push({
+         date: data[i][0], teacher: data[i][1], name: data[i][2],
+         status: data[i][3], reason: data[i][4] || ''
+       });
+     }
+     const paged = rows.slice(offset, offset + limit);
+     result = { status: 'ok', data: paged, total: rows.length };
+
+   ▲ 위 코드를 handleRequest() 함수의 else if 체인에 추가하세요 ▲
+─────────────────────────────────────────────────────────────── */
+
+const TEACHERS=[
+  {id:'유치부',name:'유치부'},{id:'최슬기',name:'최슬기'},{id:'장주영',name:'장주영'},
+  {id:'김동희',name:'김동희'},{id:'김세지',name:'김세지'},{id:'최혜리',name:'최혜리'},
+  {id:'조연우',name:'조연우'},{id:'이주연',name:'이주연'},{id:'송기창',name:'송기창'}
+];
+const BASE_STUDENTS={
+  '유치부':['권하온','김하진','최하민','김주하','고다온','김선우','김재하','권하준','이소윤','정하겸'],
+  '최슬기':['김주이','김요셉','김규린'],'장주영':['서태율','이소원','박예림'],
+  '김동희':['황찬','한정현','송하람','김시완'],'김세지':['김에스더','고다겸','이로움'],
+  '최혜리':['김서연','김다니','고이은','김수아','최한나'],
+  '조연우':['김민찬','김온유','김주안','홍한결'],'이주연':['김새론','노하린','유민아','서은율'],
+  '송기창':['김나결','김바울','송하민','최다온','홍한빛']
+};
+
+let state={teacher:null,date:null,attendance:{},editKey:null,churchVal:'',editChurchVal:'',editMode:false,allStudentsData:[],fromAll:false};
+
+/* ── 로컬 스토리지 ── */
+function loadExtra(){try{return JSON.parse(localStorage.getItem('extra_students')||'{}');}catch(e){return {};}}
+function saveExtra(d){try{localStorage.setItem('extra_students',JSON.stringify(d));}catch(e){}}
+function loadInfo(){try{return JSON.parse(localStorage.getItem('student_info')||'{}');}catch(e){return {};}}
+function saveInfo(d){try{localStorage.setItem('student_info',JSON.stringify(d));}catch(e){}}
+function loadAttCache(tid,dk){try{const r=localStorage.getItem('att_'+tid+'_'+dk);return r?JSON.parse(r):{};}catch(e){return {};}}
+function saveAttCache(tid,dk,att){try{localStorage.setItem('att_'+tid+'_'+dk,JSON.stringify(att));}catch(e){}}
+
+function getStudents(tid){
+  const base=BASE_STUDENTS[tid]||[];
+  const extra=(loadExtra()[tid]||[]).filter(n=>!base.includes(n));
+  return [...base,...extra];
+}
+function initials(n){return n?n.slice(0,2):'?';}
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function showToast(msg,dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+async function apiCall(params){
+  // GET 방식: getAttendance, getStudents
+  // POST 방식: saveAttendance, saveStudent (데이터가 커서 URL 한계 초과 방지)
+  const action=params.action||'';
+  if(action.startsWith('save')){
+    // POST: form-data로 전송 (Apps Script CORS 우회)
+    const form=new FormData();
+    Object.entries(params).forEach(([k,v])=>form.append(k,typeof v==='object'?JSON.stringify(v):v));
+    const res=await fetch(API,{method:'POST',body:form});
+    return await res.json();
+  } else {
+    const url=new URL(API);
+    Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,typeof v==='object'?JSON.stringify(v):v));
+    const res=await fetch(url.toString());
+    return await res.json();
+  }
+}
+
+/* ── 선생님 홈 ── */
+function renderTeachers(){
+  document.getElementById('teacher-grid').innerHTML=TEACHERS.map(t=>{
+    const cnt=getStudents(t.id).length;
+    return `<button class="card-btn" onclick="selectTeacher('${t.id}')">
+      <div class="nm">${t.name} 선생님</div>
+      <div class="sb">${cnt}명</div>
+    </button>`;
+  }).join('');
+}
+
+function selectTeacher(id){
+  state.teacher=TEACHERS.find(t=>t.id===id);
+  document.getElementById('date-title').textContent=state.teacher.name+' 선생님';
+  renderDates();
+  switchTab('att');
+  goTo('s-date');
+}
+
+/* ── 날짜 ── */
+const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const DAYS=['일','월','화','수','목','금','토'];
+let dateShowMonths = 2; // 처음엔 2개월치 표시
+
+function getLatestSunday(){
+  const today=new Date();
+  const d=new Date(today);
+  while(d.getDay()!==0)d.setDate(d.getDate()-1);
+  return d;
+}
+function getSundays(monthsBack){
+  // 이번 주 주일부터 monthsBack개월 전까지 모든 주일
+  const dates=[];
+  const start=getLatestSunday();
+  const limit=monthsBack*5; // 대략 월 4~5주
+  let d=new Date(start);
+  for(let i=0;i<limit;i++){
+    dates.push(new Date(d));
+    d.setDate(d.getDate()-7);
+  }
+  return dates;
+}
+function fmtKey(d){
+  // 로컬 날짜 기준 YYYY-MM-DD (시간대 오류 방지)
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function fmtLabel(d){
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}일`;
+}
+function fmtFull(d){
+  return `${d.getFullYear()}년 ${MONTHS[d.getMonth()]} ${d.getDate()}일`;
+}
+function renderDates(){
+  dateShowMonths=3;
+  renderDateList();
+}
+function renderDateList(){
+  const dates=getSundays(dateShowMonths);
+  const todayKey=fmtKey(getLatestSunday());
+  const tid=state.teacher?.id;
+  // 월별 그루핑
+  const byMonth={};
+  dates.forEach(d=>{
+    const mk=`${d.getFullYear()}-${d.getMonth()}`;
+    if(!byMonth[mk])byMonth[mk]={label:`${d.getFullYear()}년 ${MONTHS[d.getMonth()]}`,dates:[]};
+    byMonth[mk].dates.push(d);
+  });
+  let html='';
+  Object.values(byMonth).forEach(mg=>{
+    html+=`<div class="date-month-group">
+      <div class="date-month-title">${mg.label}</div>
+      <div class="date-grid">`;
+    mg.dates.forEach(d=>{
+      const dk=fmtKey(d);
+      const isToday=dk===todayKey;
+      const hasData=tid?!!Object.keys(loadAttCache(tid,dk)).length:false;
+      html+=`<button class="date-chip${isToday?' today-chip':''}${hasData?' has-data':''}"
+        onclick="selectDate('${dk}','${fmtLabel(d)}')">
+        <div class="mo">${MONTHS[d.getMonth()]}</div>
+        <div class="dy">${d.getDate()}</div>
+        <div class="dy-label">${DAYS[d.getDay()]}요일</div>
+      </button>`;
+    });
+    html+='</div></div>';
+  });
+  html+=`<button class="load-more-btn" onclick="loadMoreDates()">⬆ 이전 날짜 더 보기</button>`;
+  document.getElementById('date-list').innerHTML=html;
+}
+function loadMoreDates(){
+  dateShowMonths+=1;
+  renderDateList();
+  // 새로 추가된 부분으로 스크롤
+  const el=document.getElementById('date-list');
+  if(el)el.lastElementChild?.previousElementSibling?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── 탭 ── */
+function switchTab(tab){
+  document.getElementById('pane-att').style.display=tab==='att'?'block':'none';
+  document.getElementById('pane-list').style.display=tab==='list'?'block':'none';
+  document.getElementById('tab-att').className='tab'+(tab==='att'?' active':'');
+  document.getElementById('tab-list').className='tab'+(tab==='list'?' active':'');
+  if(tab==='list')renderStudentLinks();
+}
+
+/* ── 학생 링크 목록 ── */
+function renderStudentLinks(){
+  const students=getStudents(state.teacher.id);
+  const info=loadInfo();
+  const el=document.getElementById('student-links');
+  if(!students.length){el.innerHTML='<div class="empty">등록된 학생이 없어요.<br>새 학생 버튼으로 추가하세요.</div>';return;}
+  el.innerHTML=students.map(name=>{
+    const key=state.teacher.id+'_'+name;
+    const rec=info[key]||{};
+    return `<div class="slink" onclick="openStudentDetail('${name}')">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="avatar">${initials(name)}</div>
+        <div>
+          <span style="font-size:14px;font-weight:700;color:var(--text);">${name}</span>
+          ${rec.isNew?'<span class="new-badge">NEW</span>':''}
+          ${rec.grade?`<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${rec.grade}</div>`:''}
+        </div>
+      </div>
+      <span style="color:var(--text-hint);font-size:18px;">›</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── 출석체크 ── */
+async function selectDate(key,label){
+  state.date={key,label};
+  // 캐시 먼저 보여주고
+  state.attendance=loadAttCache(state.teacher.id,key);
+  goTo('s-students');
+  document.getElementById('att-title').textContent=state.teacher.name+' 선생님';
+  document.getElementById('att-sub').textContent=label+' · 불러오는 중...';
+  renderStudentList();
+  // 항상 구글시트에서 최신 데이터 덮어쓰기
+  try{
+    const res=await apiCall({action:'getAttendance',date:key,teacher:state.teacher.id});
+    if(res.status==='ok'){
+      // 시트 데이터로 완전히 교체
+      const fresh={};
+      res.data.forEach(r=>{fresh[r.name]={status:r.status,reason:r.reason||''};});
+      // 시트에 없는 항목은 캐시에서 유지 (로컬에서 작성 중인 것)
+      Object.keys(state.attendance).forEach(name=>{
+        if(!fresh[name]&&state.attendance[name]?.status) fresh[name]=state.attendance[name];
+      });
+      state.attendance=fresh;
+      saveAttCache(state.teacher.id,key,state.attendance);
+      renderStudentList();
+      document.getElementById('att-sub').textContent=label+' · 최신 데이터';
+    } else {
+      document.getElementById('att-sub').textContent=label+' (캐시)';
+    }
+  }catch(e){
+    document.getElementById('att-sub').textContent=label+' (오프라인)';
+  }
+}
+
+function renderStudentList(){
+  const students=getStudents(state.teacher.id);
+  document.getElementById('student-list').innerHTML=students.map((name,i)=>{
+    const rec=state.attendance[name]||{};
+    return `<div class="srow" id="sr-${i}">
+      <div class="srow-top">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar">${initials(name)}</div>
+          <span class="sname">${name}</span>
+        </div>
+        <div class="tog-wrap">
+          <button class="tog ${rec.status==='출석'?'present':''}" onclick="setStatus('${name}','출석',${i})">출석</button>
+          <button class="tog ${rec.status==='결석'?'absent':''}" onclick="setStatus('${name}','결석',${i})">결석</button>
+        </div>
+      </div>
+      <div id="rw-${i}" style="${rec.status==='결석'?'':'display:none'}">
+        <input class="reason-inp" type="text" placeholder="결석 사유 입력" value="${rec.reason||''}" oninput="setReason('${name}',this.value)"/>
+      </div>
+    </div>`;
+  }).join('');
+  updateSummary();
+  const btn=document.getElementById('save-att-btn');
+  btn.className='big-btn';btn.textContent='💾 저장하고 처음으로';btn.disabled=false;
+}
+
+function setStatus(name,status,idx){
+  if(!state.attendance[name])state.attendance[name]={};
+  state.attendance[name].status=status;
+  const row=document.getElementById('sr-'+idx);
+  row.querySelectorAll('.tog')[0].className='tog'+(status==='출석'?' present':'');
+  row.querySelectorAll('.tog')[1].className='tog'+(status==='결석'?' absent':'');
+  document.getElementById('rw-'+idx).style.display=status==='결석'?'block':'none';
+  if(status==='출석')state.attendance[name].reason='';
+  updateSummary();
+}
+function setReason(name,val){if(!state.attendance[name])state.attendance[name]={};state.attendance[name].reason=val;}
+
+function updateSummary(){
+  const students=getStudents(state.teacher.id);
+  let p=0,a=0;
+  students.forEach(n=>{if(state.attendance[n]?.status==='출석')p++;if(state.attendance[n]?.status==='결석')a++;});
+  document.getElementById('cnt-t').textContent=students.length;
+  document.getElementById('cnt-p').textContent=p;
+  document.getElementById('cnt-a').textContent=a;
+}
+
+async function saveAttendance(){
+  const btn=document.getElementById('save-att-btn');
+  btn.textContent='저장 중...';btn.disabled=true;
+  const students=getStudents(state.teacher.id);
+  const rows=students.filter(n=>state.attendance[n]?.status).map(n=>({
+    date:state.date.key,teacher:state.teacher.id,name:n,
+    status:state.attendance[n].status,reason:state.attendance[n].reason||''
+  }));
+  saveAttCache(state.teacher.id,state.date.key,state.attendance);
+  try{
+    if(rows.length)await apiCall({action:'saveAttendance',rows});
+    btn.className='big-btn ok';btn.textContent='저장 완료 ✓';btn.disabled=false;
+    showToast('✅ 구글 시트에 저장되었습니다!');
+    setTimeout(()=>goTo('s-teacher'),900);
+  }catch(e){
+    btn.className='big-btn';btn.textContent='💾 저장하고 처음으로';btn.disabled=false;
+    showToast('⚠️ 저장 실패. 인터넷을 확인해 주세요.');
+  }
+}
+
+/* ── 학생 신상정보 보기/수정 ── */
+function openStudentDetail(name){
+  state.editKey=state.teacher.id+'_'+name;
+  state.editMode=false;
+  state.fromAll=false;
+  renderDetailView();
+  goTo('s-detail');
+}
+
+function renderDetailView(){
+  const key=state.editKey;
+  const namePart=key.split('_').slice(1).join('_');
+  const info=loadInfo();
+  const rec=info[key]||{};
+  document.getElementById('detail-name-title').textContent=namePart;
+  document.getElementById('detail-avatar').textContent=initials(namePart);
+  document.getElementById('detail-edit-btn').textContent='✏️ 수정';
+  const churchMap={yes:'<span class="badge-yes">출석 중</span>',no:'<span class="badge-no">미출석</span>',unknown:'모름','':'-'};
+  const teacherName=TEACHERS.find(t=>t.id===rec.teacher)?.name||state.teacher?.name||'-';
+  const fatherVal=rec.father||rec.parent||'-';
+  const motherVal=rec.mother||'-';
+  const phoneFVal=rec.phoneF||rec.phone||'-';
+  const phoneMVal=rec.phoneM||'-';
+  document.getElementById('detail-view').innerHTML=`
+    <div class="irow"><span class="ilabel">담당 선생님</span><span class="ival">${teacherName} 선생님</span></div>
+    <div class="irow"><span class="ilabel">학교</span><span class="ival">${rec.school||'-'}</span></div>
+    <div class="irow"><span class="ilabel">학년</span><span class="ival">${rec.grade||'-'}</span></div>
+    <div class="irow"><span class="ilabel">생년월일</span><span class="ival">${rec.birth||'-'}</span></div>
+    <div class="irow"><span class="ilabel">부 이름</span><span class="ival">${fatherVal}</span></div>
+    <div class="irow"><span class="ilabel">모 이름</span><span class="ival">${motherVal}</span></div>
+    <div class="irow"><span class="ilabel">부 연락처</span><span class="ival">${phoneFVal}</span></div>
+    <div class="irow"><span class="ilabel">모 연락처</span><span class="ival">${phoneMVal}</span></div>
+    <div class="irow"><span class="ilabel">부모님 교회출석</span><span class="ival">${churchMap[rec.church||'']}</span></div>
+    <div class="irow" style="align-items:flex-start;"><span class="ilabel" style="padding-top:2px;">비고</span><span class="ival" style="white-space:pre-wrap;line-height:1.6;">${rec.memo||'-'}</span></div>`;
+  document.getElementById('detail-view').style.display='block';
+  document.getElementById('detail-edit-form').style.display='none';
+}
+
+function toggleDetailEdit(){
+  const key=state.editKey;
+  const info=loadInfo();
+  const rec=info[key]||{};
+  const namePart=key.split('_').slice(1).join('_');
+  state.editMode=!state.editMode;
+  if(state.editMode){
+    // 수정 모드 켜기
+    document.getElementById('detail-edit-btn').textContent='✕ 취소';
+    document.getElementById('detail-view').style.display='none';
+    document.getElementById('detail-edit-form').style.display='block';
+    const sel=document.getElementById('ef-teacher');
+    sel.innerHTML=TEACHERS.map(t=>`<option value="${t.id}" ${t.id===(rec.teacher||state.teacher?.id)?'selected':''}>${t.name} 선생님</option>`).join('');
+    document.getElementById('ef-school').value=rec.school||'';
+    document.getElementById('ef-grade').value=rec.grade||'';
+    document.getElementById('ef-birth').value=rec.birth||'';
+    document.getElementById('ef-father').value=rec.father||rec.parent||'';
+    document.getElementById('ef-mother').value=rec.mother||'';
+    document.getElementById('ef-phone-f').value=rec.phoneF||rec.phone||'';
+    document.getElementById('ef-phone-m').value=rec.phoneM||'';
+    setEditChurch(rec.church||'');
+    document.getElementById('ef-memo').value=rec.memo||'';
+  }else{
+    // 보기 모드 복귀
+    renderDetailView();
+  }
+}
+
+function setEditChurch(val){
+  state.editChurchVal=val;
+  document.getElementById('er-yes').className='edit-radio-opt'+(val==='yes'?' sel-yes':'');
+  document.getElementById('er-no').className='edit-radio-opt'+(val==='no'?' sel-no':'');
+  document.getElementById('er-uk').className='edit-radio-opt'+(val==='unknown'?' sel-uk':'');
+}
+
+async function saveDetailEdit(){
+  const key=state.editKey;
+  const namePart=key.split('_').slice(1).join('_');
+  const tid=document.getElementById('ef-teacher').value;
+  const info=loadInfo();
+  const newKey=tid+'_'+namePart;
+  // 선생님이 바뀌었으면 이전 키 삭제, 명단도 이동
+  if(key!==newKey){
+    delete info[key];
+    const extra=loadExtra();
+    const oldTid=key.split('_')[0];
+    // 기존 반에서 제거
+    if(extra[oldTid])extra[oldTid]=extra[oldTid].filter(n=>n!==namePart);
+    if(!(BASE_STUDENTS[oldTid]||[]).includes(namePart)){/* 이미 base에 없는 경우만 */}
+    // 새 반에 추가 (base에 없으면)
+    if(!(BASE_STUDENTS[tid]||[]).includes(namePart)){
+      if(!extra[tid])extra[tid]=[];
+      if(!extra[tid].includes(namePart))extra[tid].push(namePart);
+    }
+    saveExtra(extra);
+    state.teacher=TEACHERS.find(t=>t.id===tid)||state.teacher;
+    state.editKey=newKey;
+  }
+  info[newKey]={
+    name:namePart,teacher:tid,
+    school:document.getElementById('ef-school').value.trim(),
+    grade:document.getElementById('ef-grade').value,
+    birth:document.getElementById('ef-birth').value.trim(),
+    father:document.getElementById('ef-father').value.trim(),
+    mother:document.getElementById('ef-mother').value.trim(),
+    phoneF:document.getElementById('ef-phone-f').value.trim(),
+    phoneM:document.getElementById('ef-phone-m').value.trim(),
+    church:state.editChurchVal,
+    memo:document.getElementById('ef-memo').value.trim(),
+    isNew:info[key]?.isNew||false
+  };
+  saveInfo(info);
+  try{await apiCall({action:'saveStudent',student:info[newKey]});}catch(e){}
+  state.editMode=false;
+  renderDetailView();
+  showToast('✅ 저장되었습니다!');
+}
+
+function deleteStudentFromDetail(){
+  const key=state.editKey;
+  const namePart=key.split('_').slice(1).join('_');
+  if(!confirm(`${namePart} 학생을 삭제할까요?`))return;
+  const info=loadInfo();delete info[key];saveInfo(info);
+  const tid=key.split('_')[0];
+  const extra=loadExtra();
+  if(extra[tid])extra[tid]=extra[tid].filter(n=>n!==namePart);
+  saveExtra(extra);
+  switchTab('list');
+  goTo('s-date');
+  showToast('🗑️ 삭제되었습니다');
+}
+
+/* ── 새 학생 등록 ── */
+function openNewStudent(){
+  const sel=document.getElementById('f-teacher');
+  sel.innerHTML=TEACHERS.map(t=>`<option value="${t.id}" ${t.id===state.teacher?.id?'selected':''}>${t.name} 선생님</option>`).join('');
+  document.getElementById('f-name').value='';
+  document.getElementById('f-school').value='';
+  document.getElementById('f-grade').value='';
+  document.getElementById('f-birth').value='';
+  document.getElementById('f-father').value='';
+  document.getElementById('f-mother').value='';
+  document.getElementById('f-phone-f').value='';
+  document.getElementById('f-phone-m').value='';
+  document.getElementById('f-memo').value='';
+  setChurch('');
+  const btn=document.getElementById('form-save-btn');
+  btn.className='big-btn';btn.textContent='저장하기';btn.disabled=false;
+  goTo('s-form');
+}
+
+function setChurch(val){
+  state.churchVal=val;
+  document.getElementById('r-yes').className='radio-opt'+(val==='yes'?' sel-yes':'');
+  document.getElementById('r-no').className='radio-opt'+(val==='no'?' sel-no':'');
+  document.getElementById('r-uk').className='radio-opt'+(val==='unknown'?' sel-uk':'');
+}
+
+async function saveNewStudent(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('⚠️ 이름을 입력해 주세요');return;}
+  const tid=document.getElementById('f-teacher').value;
+  const key=tid+'_'+name;
+  const info=loadInfo();
+  info[key]={
+    name,teacher:tid,
+    school:document.getElementById('f-school').value.trim(),
+    grade:document.getElementById('f-grade').value,
+    birth:document.getElementById('f-birth').value.trim(),
+    father:document.getElementById('f-father').value.trim(),
+    mother:document.getElementById('f-mother').value.trim(),
+    phoneF:document.getElementById('f-phone-f').value.trim(),
+    phoneM:document.getElementById('f-phone-m').value.trim(),
+    memo:document.getElementById('f-memo').value.trim(),
+    church:state.churchVal,isNew:true
+  };
+  saveInfo(info);
+  const extra=loadExtra();
+  if(!extra[tid])extra[tid]=[];
+  if(!extra[tid].includes(name)&&!(BASE_STUDENTS[tid]||[]).includes(name))extra[tid].push(name);
+  saveExtra(extra);
+  try{await apiCall({action:'saveStudent',student:info[key]});}catch(e){}
+  state.teacher=TEACHERS.find(t=>t.id===tid)||state.teacher;
+  document.getElementById('date-title').textContent=state.teacher.name+' 선생님';
+  renderDates();
+  const btn=document.getElementById('form-save-btn');
+  btn.className='big-btn ok';btn.textContent='저장 완료 ✓';btn.disabled=true;
+  showToast('✅ 새 학생이 등록되었습니다!');
+  setTimeout(()=>{switchTab('list');goTo('s-date');},800);
+}
+
+/* ══════════════════════════════════════
+   전체 학생 목록
+══════════════════════════════════════ */
+function openAllStudents(){
+  // 전체 학생 데이터 수집
+  const info=loadInfo();
+  const all=[];
+  TEACHERS.forEach(t=>{
+    getStudents(t.id).forEach(name=>{
+      const key=t.id+'_'+name;
+      const rec=info[key]||{};
+      all.push({name,teacherId:t.id,teacherName:t.name,grade:rec.grade||'',key});
+    });
+  });
+  state.allStudentsData=all;
+  document.getElementById('all-students-sub').textContent=`전체 ${all.length}명`;
+  document.getElementById('all-search-inp').value='';
+  renderAllStudents(all);
+  goTo('s-all-students');
+}
+
+function filterAllStudents(){
+  const q=document.getElementById('all-search-inp').value.trim().toLowerCase();
+  const filtered=q
+    ? state.allStudentsData.filter(s=>s.name.toLowerCase().includes(q)||s.teacherName.toLowerCase().includes(q))
+    : state.allStudentsData;
+  renderAllStudents(filtered);
+}
+
+function renderAllStudents(list){
+  const body=document.getElementById('all-students-body');
+  if(!list.length){
+    body.innerHTML='<div class="empty">검색 결과가 없어요</div>';
+    return;
+  }
+  // 선생님별로 그룹핑
+  const byTeacher={};
+  list.forEach(s=>{
+    if(!byTeacher[s.teacherName])byTeacher[s.teacherName]=[];
+    byTeacher[s.teacherName].push(s);
+  });
+  let html='';
+  Object.entries(byTeacher).forEach(([tname,students])=>{
+    html+=`<div class="all-teacher-section">
+      <div class="all-teacher-label">${tname} 선생님 <span style="font-weight:400;color:var(--text-hint);">${students.length}명</span></div>`;
+    students.forEach(s=>{
+      html+=`<div class="slink" onclick="openStudentDetailFromAll('${s.teacherId}','${s.name}')">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="avatar">${initials(s.name)}</div>
+          <div>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">${s.name}</span>
+            ${s.grade?`<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${s.grade}</div>`:''}
+          </div>
+        </div>
+        <span style="color:var(--text-hint);font-size:18px;">›</span>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  body.innerHTML=html;
+}
+
+function openStudentDetailFromAll(tid,name){
+  state.teacher=TEACHERS.find(t=>t.id===tid);
+  state.editKey=tid+'_'+name;
+  state.editMode=false;
+  // 돌아갈 때 전체목록으로
+  state.fromAll=true;
+  renderDetailView();
+  goTo('s-detail');
+}
+
+/* ── 통계용: 구글시트에서 전체 출석 데이터 동기화 ── */
+let attSyncDone=false;
+async function syncAttendanceFromSheet(){
+  if(attSyncDone)return;
+  try{
+    // Apps Script에 getAllAttendance 액션 요청 (페이지네이션: offset 지원)
+    let offset=0;
+    const BATCH=500;
+    while(true){
+      const res=await apiCall({action:'getAllAttendance',offset:String(offset),limit:String(BATCH)});
+      if(res.status!=='ok'||!res.data||!res.data.length)break;
+      res.data.forEach(r=>{
+        if(!r.date||!r.teacher||!r.name||!r.status)return;
+        const cache=loadAttCache(r.teacher,r.date);
+        cache[r.name]={status:r.status,reason:r.reason||''};
+        saveAttCache(r.teacher,r.date,cache);
+      });
+      if(res.data.length<BATCH)break; // 마지막 페이지
+      offset+=BATCH;
+    }
+    attSyncDone=true;
+  }catch(e){
+    // 실패해도 캐시 데이터로 계속 동작
+  }
+}
+
+/* ── 통계 화면 ── */
+let statsFilter='전체';
+let statsTab='week';
+
+function openStats(){
+  statsFilter='전체';
+  statsTab='week';
+  renderStatsFilter();
+  switchStatsTab('week');
+  goTo('s-stats');
+  // 구글시트 출석 데이터 동기화 (백그라운드)
+  const body=document.getElementById('stats-body');
+  if(!attSyncDone){
+    body.insertAdjacentHTML('afterbegin','<div id="att-sync-notice" style="background:var(--amber-bg);border:0.5px solid var(--amber-border);border-radius:var(--radius-sm);padding:9px 13px;margin-bottom:12px;font-size:12px;color:var(--amber);">🔄 구글시트에서 출석 데이터를 불러오는 중...</div>');
+    syncAttendanceFromSheet().then(()=>{
+      const notice=document.getElementById('att-sync-notice');
+      if(notice)notice.remove();
+      dispatchStatsTab(); // 동기화 완료 후 화면 갱신
+    });
+  }
+}
+
+function renderStatsFilter(){
+  const chips=['전체',...TEACHERS.map(t=>t.name)];
+  document.getElementById('stats-filter').innerHTML=chips.map(c=>
+    `<button class="filter-chip ${c===statsFilter?'active':''}" onclick="setStatsFilter('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setStatsFilter(f){
+  statsFilter=f;
+  renderStatsFilter();
+  dispatchStatsTab();
+}
+
+function switchStatsTab(tab){
+  statsTab=tab;
+  ['week','month','student'].forEach(t=>{
+    document.getElementById('stab-'+t).className='stats-tab'+(t===tab?' active':'');
+  });
+  dispatchStatsTab();
+}
+
+function dispatchStatsTab(){
+  if(statsTab==='week') renderWeekStats();
+  else if(statsTab==='month') renderMonthStats();
+  else if(statsTab==='student') renderStudentStats();
+}
+
+/* ── 공통: 전체 출석 데이터 수집 ── */
+function collectAllRows(monthsBack){
+  const dates=getSundays(monthsBack||24);
+  const rows=[];
+  const targetTeachers=statsFilter==='전체'?TEACHERS:TEACHERS.filter(t=>t.name===statsFilter);
+  targetTeachers.forEach(t=>{
+    dates.forEach(d=>{
+      const dk=fmtKey(d);
+      const att=loadAttCache(t.id,dk);
+      const students=getStudents(t.id);
+      students.forEach(name=>{
+        const rec=att[name];
+        if(rec&&rec.status){
+          rows.push({
+            date:dk,year:d.getFullYear(),month:d.getMonth(),
+            dateLabel:fmtLabel(d),teacher:t.name,teacherId:t.id,
+            name,status:rec.status,reason:rec.reason||''
+          });
+        }
+      });
+    });
+  });
+  return {rows,dates};
+}
+
+/* ══════════════════════════════════════
+   공통 SVG 차트 빌더 (막대 + 추세선 + 값)
+══════════════════════════════════════ */
+function buildChart(items, title){
+  // items: [{xLine1, xLine2, p, a}, ...]
+  if(!items||!items.length) return '';
+  const n=items.length;
+  const PL=36, PR=12, PT=28, PB=50;
+  const W=Math.max(n*52+PL+PR, 300);
+  const H=200;
+  const CW=W-PL-PR, CH=H-PT-PB;
+  const maxV=Math.max(...items.map(d=>Math.max(d.p||0,d.a||0)),1);
+  const slotW=CW/n;
+  const bHalf=Math.min(Math.floor(slotW*0.22),12);
+
+  // Y축 눈금
+  let yLines='';
+  const ticks=[0, Math.round(maxV/2), maxV];
+  ticks.forEach(v=>{
+    const y=PT+CH-Math.round((v/maxV)*CH);
+    yLines+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#e8e5df" stroke-width="0.5" stroke-dasharray="4,3"/>
+      <text x="${PL-5}" y="${y+4}" font-size="9" fill="#bbb" text-anchor="end">${v}</text>`;
+  });
+
+  // 막대 + 값 라벨 + X축 라벨
+  let bars='', xlabels='';
+  const pPts=[], aPts=[];
+
+  items.forEach((d,i)=>{
+    const cx=PL+slotW*i+slotW/2;
+    const pH=d.p>0?Math.max(Math.round((d.p/maxV)*CH),3):0;
+    const aH=d.a>0?Math.max(Math.round((d.a/maxV)*CH),3):0;
+
+    // 출석 막대 (중앙 왼쪽)
+    if(pH>0){
+      const bx=cx-bHalf*2-1;
+      bars+=`<rect x="${bx}" y="${PT+CH-pH}" width="${bHalf*2}" height="${pH}" fill="#639922" rx="2" opacity="0.9"/>`;
+      bars+=`<text x="${bx+bHalf}" y="${PT+CH-pH-5}" font-size="9" fill="#3B6D11" text-anchor="middle" font-weight="700">${d.p}</text>`;
+    }
+    // 결석 막대 (중앙 오른쪽)
+    if(aH>0){
+      const bx=cx+1;
+      bars+=`<rect x="${bx}" y="${PT+CH-aH}" width="${bHalf*2}" height="${aH}" fill="#E24B4A" rx="2" opacity="0.9"/>`;
+      bars+=`<text x="${bx+bHalf}" y="${PT+CH-aH-5}" font-size="9" fill="#A32D2D" text-anchor="middle" font-weight="700">${d.a}</text>`;
+    }
+
+    // X축 라벨 2줄
+    xlabels+=`<text x="${cx}" y="${H-PB+16}" font-size="9.5" fill="#888" text-anchor="middle" font-weight="500">${d.xLine1}</text>`;
+    if(d.xLine2) xlabels+=`<text x="${cx}" y="${H-PB+28}" font-size="8.5" fill="#bbb" text-anchor="middle">${d.xLine2}</text>`;
+
+    // 추세선 포인트
+    pPts.push({x:cx, y:PT+CH-(d.p>0?Math.round((d.p/maxV)*CH):0)});
+    aPts.push({x:cx, y:PT+CH-(d.a>0?Math.round((d.a/maxV)*CH):0)});
+  });
+
+  // 추세선 생성 (polyline)
+  function makeLine(pts, color, dash=''){
+    if(pts.length<2) return '';
+    const pointsStr=pts.map(p=>`${p.x},${p.y}`).join(' ');
+    return `<polyline points="${pointsStr}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+  }
+  function makeDots(pts, color){
+    return pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${color}" stroke="#fff" stroke-width="1.2"/>`).join('');
+  }
+
+  const trendP=makeLine(pPts,'#639922');
+  const trendA=makeLine(aPts,'#E24B4A','4,3');
+  const dotsP=makeDots(pPts,'#639922');
+  const dotsA=makeDots(aPts,'#E24B4A');
+
+  const legend=`<div style="display:flex;gap:14px;margin-bottom:6px;font-size:11px;color:var(--text-sub);">
+    <span style="display:flex;align-items:center;gap:4px;">
+      <svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#639922" stroke-width="2"/><circle cx="9" cy="5" r="3" fill="#639922"/></svg>출석</span>
+    <span style="display:flex;align-items:center;gap:4px;">
+      <svg width="18" height="10"><line x1="0" y1="5" x2="18" y2="5" stroke="#E24B4A" stroke-width="2" stroke-dasharray="4,2"/><circle cx="9" cy="5" r="3" fill="#E24B4A"/></svg>결석</span>
+  </div>`;
+
+  return `<div style="background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 14px 10px;margin-bottom:14px;">
+    <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:6px;">${title}</div>
+    ${legend}
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <svg width="${W}" height="${H}" style="display:block;">
+        ${yLines}
+        <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+CH}" stroke="#ddd" stroke-width="0.7"/>
+        <line x1="${PL}" y1="${PT+CH}" x2="${W-PR}" y2="${PT+CH}" stroke="#ddd" stroke-width="0.7"/>
+        ${bars}
+        ${trendP}${trendA}
+        ${dotsP}${dotsA}
+        ${xlabels}
+      </svg>
+    </div>
+  </div>`;
+}
+
+function totalStudentsForFilter(){
+  const targetTeachers=statsFilter==='전체'?TEACHERS:TEACHERS.filter(t=>t.name===statsFilter);
+  return targetTeachers.reduce((s,t)=>s+getStudents(t.id).length,0);
+}
+
+/* ── 주별 통계 ── */
+function renderWeekStats(){
+  const body=document.getElementById('stats-body');
+  document.getElementById('stats-topbar-sub').textContent=(statsFilter==='전체'?'전체':statsFilter+' 선생님')+' · 주별 현황';
+  const {rows}=collectAllRows(12);
+  if(!rows.length){body.innerHTML='<div class="empty">저장된 출석 데이터가 없어요.</div>';return;}
+
+  const byDate={};
+  rows.forEach(r=>{
+    if(!byDate[r.date])byDate[r.date]={label:r.dateLabel,p:0,a:0,classes:{},students:[]};
+    byDate[r.date].p+=(r.status==='출석'?1:0);
+    byDate[r.date].a+=(r.status==='결석'?1:0);
+    if(!byDate[r.date].classes[r.teacher])byDate[r.date].classes[r.teacher]={p:0,a:0,students:[]};
+    byDate[r.date].classes[r.teacher].p+=(r.status==='출석'?1:0);
+    byDate[r.date].classes[r.teacher].a+=(r.status==='결석'?1:0);
+    byDate[r.date].classes[r.teacher].students.push({name:r.name,status:r.status,reason:r.reason||''});
+    byDate[r.date].students.push({name:r.name,teacher:r.teacher,status:r.status,reason:r.reason||''});
+  });
+
+  const sortedAsc=Object.entries(byDate).sort((a,b)=>a[0].localeCompare(b[0])).slice(-10);
+  const svgChart=buildChart(sortedAsc.map(([dk,e])=>({
+    xLine1: e.label.replace(/(\d+)월\s*(\d+)일/,'$1/$2') || e.label,
+    xLine2: '',
+    p:e.p, a:e.a
+  })), '주간 출석 인원');
+
+  let html=svgChart;
+  const sortedDesc=Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0]));
+  sortedDesc.forEach(([dk,entry])=>{
+    const t=entry.p+entry.a;
+    const pct=t>0?Math.round(entry.p/t*100):0;
+
+    // 반별 행 (전체 필터일 때)
+    const classRows=statsFilter==='전체'
+      ?Object.entries(entry.classes).map(([cls,s])=>{
+          const ct=s.p+s.a;const cp=ct>0?Math.round(s.p/ct*100):0;
+          // 반별 출석/결석 학생 목록
+          const presentNames=s.students.filter(x=>x.status==='출석').map(x=>x.name);
+          const absentStudents=s.students.filter(x=>x.status==='결석');
+          const studentListHtml=`
+            <div style="margin-top:6px;padding:8px 10px;background:var(--card2);border-radius:6px;font-size:12px;">
+              ${presentNames.length?`<div style="margin-bottom:4px;"><span style="color:var(--primary);font-weight:700;">출석(${presentNames.length})</span> <span style="color:var(--text-sub);">${presentNames.join(', ')}</span></div>`:''}
+              ${absentStudents.length?`<div>${absentStudents.map(x=>`<span style="color:var(--danger);font-weight:700;">${x.name}</span>${x.reason?`<span style="color:var(--text-hint);"> (${x.reason})</span>`:''}`).join(', ')}</div>`:''}
+            </div>`;
+          return `<div class="week-row" style="flex-direction:column;align-items:stretch;">
+            <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleWeekClassDetail(this)">
+              <span class="week-date" style="font-size:12px;">${cls}</span>
+              <div style="display:flex;align-items:center;gap:5px;flex:1;margin-left:8px;">
+                <div class="week-bar-wrap"><div class="bar-wrap"><div class="bar-fill" style="width:${cp}%"></div></div></div>
+                <div style="display:flex;gap:5px;flex-shrink:0;">
+                  <span class="pill pill-p" style="font-size:11px;">출 ${s.p}</span>
+                  <span class="pill pill-a" style="font-size:11px;">결 ${s.a}</span>
+                  <span style="font-size:11px;color:var(--text-hint);padding:3px 0;">${cp}%</span>
+                  <span style="font-size:11px;color:var(--text-hint);padding:3px 0;">›</span>
+                </div>
+              </div>
+            </div>
+            <div class="week-class-detail" style="display:none;">${studentListHtml}</div>
+          </div>`;}).join('')
+      :(() => {
+          // 특정 선생님 필터 - 출석/결석 학생 목록 직접 표시
+          const presentNames=entry.students.filter(x=>x.status==='출석').map(x=>x.name);
+          const absentStudents=entry.students.filter(x=>x.status==='결석');
+          return `<div style="padding:8px 10px;font-size:12px;">
+            ${presentNames.length?`<div style="margin-bottom:4px;"><span style="color:var(--primary);font-weight:700;">출석(${presentNames.length})</span> <span style="color:var(--text-sub);">${presentNames.join(', ')}</span></div>`:''}
+            ${absentStudents.length?`<div><span style="color:var(--danger);font-weight:700;">결석</span> ${absentStudents.map(x=>`<span style="color:var(--danger);">${x.name}</span>${x.reason?`<span style="color:var(--text-hint);"> (${x.reason})</span>`:''}`).join(', ')}</div>`:''}
+          </div>`;
+        })();
+
+    html+=`<div class="stat-date-card">
+      <div class="stat-date-header" onclick="toggleDetail(this)">
+        <span class="stat-date-label">${entry.label}</span>
+        <div class="stat-date-pills">
+          <span class="pill pill-p">출석 ${entry.p}</span>
+          <span class="pill pill-a">결석 ${entry.a}</span>
+          <span style="font-size:12px;font-weight:700;color:${pct>=80?'var(--primary)':pct>=60?'var(--amber)':'var(--danger)'};">${pct}%</span>
+        </div>
+      </div>
+      <div class="month-detail" style="display:none;">${classRows}</div>
+    </div>`;
+  });
+  body.innerHTML=html;
+}
+
+/* 반별 학생 목록 토글 */
+function toggleWeekClassDetail(header){
+  const detail=header.nextElementSibling;
+  if(!detail)return;
+  const isOpen=detail.style.display==='block';
+  detail.style.display=isOpen?'none':'block';
+}
+
+/* ── 월별 통계 ── */
+function renderMonthStats(){
+  const body=document.getElementById('stats-body');
+  document.getElementById('stats-topbar-sub').textContent=(statsFilter==='전체'?'전체':statsFilter+' 선생님')+' · 월별 현황';
+  const {rows}=collectAllRows(24);
+  if(!rows.length){body.innerHTML='<div class="empty">저장된 출석 데이터가 없어요.</div>';return;}
+
+  const byMonth={};
+  rows.forEach(r=>{
+    const mk=`${r.year}-${String(r.month+1).padStart(2,'0')}`;
+    const ml=`${MONTHS[r.month]}`;
+    if(!byMonth[mk])byMonth[mk]={label:ml,fullLabel:`${r.year}년 ${MONTHS[r.month]}`,year:r.year,month:r.month,p:0,a:0,weeks:{}};
+    byMonth[mk].p+=(r.status==='출석'?1:0);
+    byMonth[mk].a+=(r.status==='결석'?1:0);
+    if(!byMonth[mk].weeks[r.date])byMonth[mk].weeks[r.date]={label:r.dateLabel,p:0,a:0};
+    byMonth[mk].weeks[r.date].p+=(r.status==='출석'?1:0);
+    byMonth[mk].weeks[r.date].a+=(r.status==='결석'?1:0);
+  });
+
+  const sortedAsc=Object.entries(byMonth).sort((a,b)=>a[0].localeCompare(b[0])).slice(-10);
+  const sortedDesc=Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0]));
+
+  const svgChart=buildChart(sortedAsc.map(([mk,e])=>({
+    xLine1: e.label,
+    xLine2: String(e.year).slice(2)+"년",
+    p:e.p, a:e.a
+  })), '월별 출석 인원');
+
+  let html=svgChart;
+  sortedDesc.forEach(([mk,entry])=>{
+    const t=entry.p+entry.a;
+    const pct=t>0?Math.round(entry.p/t*100):0;
+    const weekRows=Object.entries(entry.weeks).sort((a,b)=>b[0].localeCompare(a[0])).map(([dk,w])=>{
+      const wt=w.p+w.a;const wp=wt>0?Math.round(w.p/wt*100):0;
+      return `<div class="week-row">
+        <span class="week-date">${w.label}</span>
+        <div class="week-bar-wrap"><div class="bar-wrap"><div class="bar-fill" style="width:${wp}%"></div></div></div>
+        <div style="display:flex;gap:5px;flex-shrink:0;">
+          <span class="pill pill-p" style="font-size:11px;">출 ${w.p}</span>
+          <span class="pill pill-a" style="font-size:11px;">결 ${w.a}</span>
+          <span style="font-size:11px;color:var(--text-hint);padding:3px 0;">${wp}%</span>
+        </div>
+      </div>`;}).join('');
+    html+=`<div class="month-stat-card">
+      <div class="month-stat-header" onclick="toggleDetail(this)">
+        <div>
+          <div class="month-label">${entry.fullLabel}</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">출석 ${entry.p}회 · 결석 ${entry.a}회</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <span class="month-rate">${pct}%</span>
+          <div class="bar-wrap" style="width:70px;"><div class="bar-fill" style="width:${pct}%;background:${pct>=80?'var(--primary-border)':pct>=60?'var(--amber-border)':'var(--danger-border)'};"></div></div>
+        </div>
+      </div>
+      <div class="month-detail">${weekRows}</div>
+    </div>`;
+  });
+  body.innerHTML=html;
+}
+
+/* ── 학생별 출석률 통계 ── */
+function renderStudentStats(){
+  const body=document.getElementById('stats-body');
+  document.getElementById('stats-topbar-sub').textContent=(statsFilter==='전체'?'전체':statsFilter+' 선생님')+' · 학생별 현황';
+  const {rows}=collectAllRows(24);
+
+  // 학생별 집계
+  const byStudent={};
+  const targetTeachers=statsFilter==='전체'?TEACHERS:TEACHERS.filter(t=>t.name===statsFilter);
+  targetTeachers.forEach(t=>{
+    getStudents(t.id).forEach(name=>{
+      const key=t.name+'_'+name;
+      byStudent[key]={name,teacher:t.name,p:0,a:0};
+    });
+  });
+  rows.forEach(r=>{
+    const key=r.teacher+'_'+r.name;
+    if(!byStudent[key])byStudent[key]={name:r.name,teacher:r.teacher,p:0,a:0};
+    byStudent[key].p+=(r.status==='출석'?1:0);
+    byStudent[key].a+=(r.status==='결석'?1:0);
+  });
+
+  if(!Object.keys(byStudent).length){body.innerHTML='<div class="empty">데이터가 없어요.</div>';return;}
+
+  let html='';
+
+  // 선생님별 그룹 → 출석률 낮은 순 정렬
+  const byTeacher={};
+  Object.values(byStudent).forEach(s=>{
+    if(!byTeacher[s.teacher])byTeacher[s.teacher]=[];
+    byTeacher[s.teacher].push(s);
+  });
+  Object.entries(byTeacher).forEach(([tname,students])=>{
+    students.sort((a,b)=>{
+      const ra=(a.p+a.a)>0?a.p/(a.p+a.a):1;
+      const rb=(b.p+b.a)>0?b.p/(b.p+b.a):1;
+      return ra-rb;
+    });
+    html+=`<div class="all-teacher-section">
+      <div class="all-teacher-label">${tname} 선생님</div>`;
+    students.forEach(s=>{
+      const t=s.p+s.a;
+      const pct=t>0?Math.round(s.p/t*100):null;
+      const pctColor=pct===null?'var(--text-hint)':pct>=80?'var(--primary)':pct>=60?'var(--amber)':'var(--danger)';
+      html+=`<div class="student-stat-card">
+        <div class="student-stat-header">
+          <div class="avatar">${initials(s.name)}</div>
+          <span style="font-size:14px;font-weight:700;flex-shrink:0;width:60px;">${s.name}</span>
+
+          <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;">
+            <span class="pill pill-p" style="font-size:11px;">출 ${s.p}</span>
+            <span class="pill pill-a" style="font-size:11px;">결 ${s.a}</span>
+            <span style="font-size:13px;font-weight:700;color:${pctColor};min-width:34px;text-align:right;">${pct!==null?pct+'%':'-'}</span>
+          </div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  body.innerHTML=html;
+}
+
+/* ── 공통: 펼치기/접기 ── */
+function toggleDetail(header){
+  const detail=header.nextElementSibling;
+  if(!detail)return;
+  const isOpen=detail.style.display==='flex'||detail.style.display==='block';
+  detail.style.display=isOpen?'none':'flex';
+  detail.style.flexDirection='column';
+}
+
+async function init(){
+  // 앱 시작 시 구글시트에서 학생정보 동기화
+  showSyncBanner('🔄 구글시트에서 학생 정보를 불러오는 중...');
+  renderTeachers();
+  try{
+    const res=await apiCall({action:'getStudents'});
+    if(res.status==='ok'&&res.data&&res.data.length){
+      // 시트에서 받은 학생 정보를 로컬에 반영
+      const info=loadInfo();
+      const extra=loadExtra();
+      res.data.forEach(s=>{
+        const tid=s.teacher;
+        const key=tid+'_'+s.name;
+        // 학생정보 업데이트 (시트 우선)
+        info[key]={
+          name:s.name, teacher:tid,
+          school:s.school||'', grade:s.grade||'',
+          birth:s.birth||'', father:s.father||'',
+          mother:s.mother||'', phoneF:s.phoneF||'',
+          phoneM:s.phoneM||'', church:s.church||'',
+          memo:s.memo||'',
+          isNew: info[key]?.isNew||false
+        };
+        // BASE_STUDENTS에 없는 학생은 extra에 추가
+        if(!(BASE_STUDENTS[tid]||[]).includes(s.name)){
+          if(!extra[tid])extra[tid]=[];
+          if(!extra[tid].includes(s.name))extra[tid].push(s.name);
+        }
+      });
+      saveInfo(info);
+      saveExtra(extra);
+      renderTeachers();
+      hideSyncBanner('✅ 학생 정보 동기화 완료!');
+    } else {
+      hideSyncBanner('');
+    }
+  }catch(e){
+    hideSyncBanner('⚠️ 오프라인 모드 - 캐시 데이터 사용');
+  }
+}
+
+function showSyncBanner(msg){
+  const b=document.getElementById('sync-banner');
+  const m=document.getElementById('sync-msg');
+  if(b&&m){b.style.display='flex';m.textContent=msg;}
+}
+function hideSyncBanner(msg){
+  const b=document.getElementById('sync-banner');
+  const m=document.getElementById('sync-msg');
+  if(!b||!m)return;
+  if(msg){m.textContent=msg;setTimeout(()=>{b.style.display='none';},2500);}
+  else{b.style.display='none';}
+}
+
+init();
+</script>
+</body>
+</html>
